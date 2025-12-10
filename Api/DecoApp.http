@@ -1,0 +1,43 @@
+@DecoApp_HostAddress = http://localhost:5298
+
+### Obtener todos los productos
+GET {{DecoApp_HostAddress}}/api/products
+Accept: application/json
+
+### Obtener un producto por Id
+GET {{DecoApp_HostAddress}}/api/products/1
+Accept: application/json
+
+### Crear un nuevo producto
+POST {{DecoApp_HostAddress}}/api/products
+Content-Type: application/json
+
+{
+  "name": "Silla Deco",
+  "description": "Silla moderna de madera",
+  "price": 150.5,
+  "stock": 20,
+  "imageUrl": "http://example.com/silla.jpg",
+  "isActive": true,
+  "categoryId": 1
+}
+
+### Actualizar un producto existente
+PUT {{DecoApp_HostAddress}}/api/products/1
+Content-Type: application/json
+
+{
+  "id": 1,
+  "name": "Silla Deco Premium",
+  "description": "Silla moderna de madera con tapizado",
+  "price": 180.0,
+  "stock": 15,
+  "imageUrl": "http://example.com/silla-premium.jpg",
+  "isActive": true,
+  "categoryId": 1
+}
+
+### Eliminar un producto
+DELETE {{DecoApp_HostAddress}}/api/products/1
+
+###
