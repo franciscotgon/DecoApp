@@ -1,53 +1,47 @@
 "use client";
 
-import Link from "next/link";
-import { Settings, Tags, Package } from "lucide-react";
+import { Settings, Tags, Package, ShoppingBag } from "lucide-react";
+import AdminCard from "@/components/admin/AdminCard";
 
 export default function AdminDashboard() {
   return (
-    <div className="max-w-4xl mx-auto py-16 px-6">
-      <h1 className="text-4xl font-bold mb-10">Panel de Administración</h1>
+    <div className="max-w-4xl mx-auto py-16 px-6 transition-colors duration-300">
+      <h1 className="text-4xl font-bold mb-4 text-foreground">
+        Panel de Administración
+      </h1>
 
-      <p className="text-gray-600 mb-10">
+      <p className="text-foreground/60 mb-10 text-lg">
         Selecciona una sección para gestionar el contenido de la tienda.
       </p>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {/* Productos */}
-        <Link
+        <AdminCard
           href="/admin/products"
-          className="bg-white shadow border rounded-xl p-6 flex flex-col items-center text-center hover:shadow-lg transition"
-        >
-          <Package size={40} className="mb-4 text-black" />
-          <h2 className="text-xl font-semibold">Productos</h2>
-          <p className="text-gray-500 text-sm mt-2">
-            Crear, editar y gestionar productos.
-          </p>
-        </Link>
+          icon={<Package size={40} />}
+          title="Productos"
+          description="Crear, editar y gestionar productos."
+        />
 
-        {/* Categorías */}
-        <Link
+        <AdminCard
           href="/admin/categories"
-          className="bg-white shadow border rounded-xl p-6 flex flex-col items-center text-center hover:shadow-lg transition"
-        >
-          <Tags size={40} className="mb-4 text-black" />
-          <h2 className="text-xl font-semibold">Categorías</h2>
-          <p className="text-gray-500 text-sm mt-2">
-            Organiza los productos en categorías.
-          </p>
-        </Link>
+          icon={<Tags size={40} />}
+          title="Categorías"
+          description="Organiza los productos en categorías."
+        />
 
-        {/* Configuración */}
-        <Link
+        <AdminCard
+          href="/admin/orders"
+          icon={<ShoppingBag size={40} />}
+          title="Órdenes"
+          description="Ver y gestionar pedidos de clientes."
+        />
+
+        <AdminCard
           href="/admin/settings"
-          className="bg-white shadow border rounded-xl p-6 flex flex-col items-center text-center hover:shadow-lg transition"
-        >
-          <Settings size={40} className="mb-4 text-black" />
-          <h2 className="text-xl font-semibold">Configuración</h2>
-          <p className="text-gray-500 text-sm mt-2">
-            Ajustes generales del sistema.
-          </p>
-        </Link>
+          icon={<Settings size={40} />}
+          title="Configuración"
+          description="Ajustes generales del sistema."
+        />
       </div>
     </div>
   );

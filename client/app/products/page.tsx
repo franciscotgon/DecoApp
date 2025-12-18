@@ -1,47 +1,50 @@
-"use client";
+import { ProductList } from "@/components/products/ProductList";
+import { getProducts } from "@/app/services/product.service";
+import { TriangleAlert } from "lucide-react";
+import Link from "next/link";
 
-import { useEffect, useState } from "react";
-import ProductList from "@/components/products/ProductList";
-import { Product } from "@/types/Product";
-import { ProductRepository } from "@/data-layer/repositories/ProductRepository";
-import { CategoryRepository } from "@/data-layer/repositories/CategoryRepository";
-import { Category } from "@/types/Category";
+export default async function ProductsPage() {
+  const allProducts = await getProducts();
 
-export default function ProductsPage() {
-  const userRole: "Admin" | "Customer" = "Admin";
-
-  const [products, setProducts] = useState<Product[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
-
-  const productRepo = new ProductRepository();
-  const categoryRepo = new CategoryRepository();
-
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        const [productData, categoryData] = await Promise.all([
-          productRepo.getAll(),
-          categoryRepo.getAll(),
-        ]);
-
-        // React 18 safe updates
-        queueMicrotask(() => {
-          setProducts(productData);
-          setCategories(categoryData);
-        });
-      } catch (err) {
-        console.error("Error cargando datos:", err);
-      }
-    };
-
-    loadData();
-  }, []);
+  if (allProducts === null) {
+    return (
+      <main className="min-h-screen bg-[var(--background)] py-24 text-center text-[var(--foreground)] transition-colors">
+        <div className="container mx-auto px-4 md:px-6 p-8 rounded-lg shadow-xl bg-gray-100 dark:bg-gray-800 border dark:border-gray-700">
+          <TriangleAlert className="inline w-12 h-12 text-red-600 dark:text-red-400 mb-4" />
+          <h1 className="text-3xl font-bold text-[var(--foreground)] mb-3">
+            Error de Carga
+          </h1>
+          <p className="text-lg text-[var(--foreground)] opacity-90 mb-6">
+            No pudimos conectar con el servidor para obtener el catálogo de
+            productos. Inténtalo de nuevo más tarde.
+          </p>
+          <Link
+            href="/"
+            className="inline-block bg-[var(--primary)] text-white font-semibold px-6 py-2 rounded-full transition hover:bg-[var(--primary-hover)] shadow-md"
+          >
+            Volver a Inicio
+          </Link>
+        </div>
+      </main>
+    );
+  }
 
   return (
-    <ProductList
-      products={products}
-      categories={categories} // ← 👈 NECESARIO
-      userRole={userRole}
-    />
+    <main className="min-h-screen bg-[var(--background)] py-16 transition-colors">
+      <div className="container mx-auto px-4 md:px-6">
+        {allProducts.length === 0 ? (
+          <div
+            className="text-center p-12 border border-gray-200 dark:border-gray-700 rounded-lg 
+                          bg-gray-50 dark:bg-gray-800 mt-10 shadow-sm"
+          >
+            <p className="text-xl text-[var(--foreground)]">
+              El catálogo está vacío. Vuelve pronto para ver nuestras novedades.
+            </p>
+          </div>
+        ) : (
+          <ProductList products={allProducts} />
+        )}
+      </div>
+    </main>
   );
 }

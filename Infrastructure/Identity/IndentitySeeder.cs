@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using DecoApp.Domain.Entities;
+using Microsoft.AspNetCore.Identity;
 
 namespace DecoApp.Infrastructure.Identity
 {
@@ -12,7 +13,6 @@ namespace DecoApp.Infrastructure.Identity
             var roles = new[]
             {
                 "Admin",
-                "Seller",
                 "Customer"
             };
 
@@ -37,7 +37,7 @@ namespace DecoApp.Infrastructure.Identity
 
             // --- Default Admin user ---
             const string adminEmail = "admin@shop.com";
-            const string adminPassword = "Admin123!@#"; // puedes cambiarlo luego
+            const string adminPassword = "Admin123!@#"; 
 
             var existingAdmin = await userManager.FindByEmailAsync(adminEmail);
 

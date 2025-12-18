@@ -1,98 +1,39 @@
-"use client";
+// client/components/products/ProductList.tsx
+import { Product } from "@/data-layer/types/Product";
+import { ProductCard } from "./ProductCard";
 
-import { useMemo, useState } from "react";
-import { Product } from "@/types/Product";
-import ProductFilters, { Filters } from "./ProductFilters";
-import { Category } from "@/types/Category";
-import Image from "next/image";
-
-interface Props {
+interface ProductListProps {
   products: Product[];
-  categories: Category[];
-  userRole: string;
 }
 
-export default function ProductList({ products, categories }: Props) {
-  const [filters, setFilters] = useState<Filters>({
-    search: "",
-    categoryId: null,
-    minPrice: null,
-    maxPrice: null,
-    inStock: null,
-  });
-
-  const filteredProducts = useMemo(() => {
-    let list = [...products];
-
-    if (filters.search.trim()) {
-      list = list.filter((p) =>
-        p.name.toLowerCase().includes(filters.search.toLowerCase())
-      );
-    }
-
-    if (filters.categoryId !== null) {
-      list = list.filter((p) => p.categoryId === filters.categoryId);
-    }
-
-    if (filters.minPrice !== null) {
-      list = list.filter((p) => p.price >= filters.minPrice!);
-    }
-
-    if (filters.maxPrice !== null) {
-      list = list.filter((p) => p.price <= filters.maxPrice!);
-    }
-
-    if (filters.inStock !== null) {
-      list = list.filter((p) =>
-        filters.inStock ? p.stock > 0 : p.stock === 0
-      );
-    }
-
-    return list;
-  }, [filters, products]);
-
-  const clearFilters = () =>
-    setFilters({
-      search: "",
-      categoryId: null,
-      minPrice: null,
-      maxPrice: null,
-      inStock: null,
-    });
-
+export function ProductList({ products }: ProductListProps) {
   return (
-    <div>
-      {/* FILTROS */}
-      <ProductFilters
-        filters={filters}
-        categories={categories}
-        onChange={setFilters}
-        onClear={clearFilters}
-      />
+    <section className="py-10 bg-[var(--background)] transition-colors">
+      <h1 className="text-3xl font-extrabold tracking-tight text-[var(--foreground)] sm:text-4xl text-center mb-10">
+        Catálogo de Productos
+      </h1>
 
-      {/* LISTA */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-        {filteredProducts.map((p) => (
-          <div key={p.id} className="bg-white shadow rounded p-4">
-            <Image
-              src={p.imageUrl || "/placeholder.jpg"}
-              alt={p.name}
-              width={400} // requerido por next/image
-              height={300} // requerido por next/image
-              className="w-full h-40 object-cover rounded"
-            />
-
-            <h3 className="text-lg font-semibold mt-2">{p.name}</h3>
-            <p className="text-gray-600">{p.description}</p>
-
-            <p className="mt-2 font-bold">${p.price}</p>
-
-            <p className={p.stock > 0 ? "text-green-600" : "text-red-600"}>
-              {p.stock > 0 ? "En stock" : "Sin stock"}
-            </p>
-          </div>
-        ))}
-      </div>
-    </div>
+      {products.length > 0 ? (
+        <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 max-w-7xl mx-auto">
+          {products.map((product) => (
+            <ProductCard key={product.id} product={product} />
+          ))}
+        </div>
+      ) : (
+        <div
+          className="mt-12 flex flex-col items-center justify-center text-center p-10 
+                        bg-[var(--secondary)] dark:bg-gray-800 rounded-lg shadow-md 
+                        border border-gray-200 dark:border-gray-700 max-w-md mx-auto"
+        >
+          <div className="text-6xl text-[var(--primary)] mb-4">🛒</div>
+          <h3 className="text-xl font-semibold text-[var(--foreground)]">
+            No hay productos disponibles
+          </h3>
+          <p className="mt-2 text-[var(--foreground)] opacity-70">
+            Parece que no hemos encontrado productos en este momento.
+          </p>
+        </div>
+      )}
+    </section>
   );
 }

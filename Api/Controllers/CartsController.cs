@@ -1,5 +1,6 @@
 ﻿using DecoApp.Application.Carts.Commands.AddItemToCart;
 using DecoApp.Application.Carts.Commands.DeleteCartItem;
+using DecoApp.Application.Carts.Commands.SyncCart;
 using DecoApp.Application.Carts.Commands.UpdateCartItem;
 using DecoApp.Application.Carts.DTOs;
 using DecoApp.Application.Carts.Queries.GetCartByUser;
@@ -57,6 +58,15 @@ namespace DecoApp.Api.Controllers
                 ProductId = productId
             }, cancellationToken);
 
+            return Ok(cartId);
+        }
+
+        // POST api/cart/sync
+        [HttpPost("sync")]
+        public async Task<ActionResult> Sync([FromBody] SyncCartDto dto, CancellationToken cancellationToken)
+        {
+            // Este comando reemplazará el contenido del carrito en la DB con lo que viene del Front
+            var cartId = await _mediator.Send(new SyncCartCommand { Dto = dto }, cancellationToken);
             return Ok(cartId);
         }
     }

@@ -1,186 +1,178 @@
-"use client";
+import Link from "next/link";
+import AutoCarousel from "@/components/ui/AutoCarousel";
+import { Product } from "@/data-layer/types/Product";
+import { getProducts } from "@/app/services/product.service";
+import { ProductCard } from "@/components/products/ProductCard";
+import {
+  TriangleAlert,
+  Sparkles,
+  Package,
+  Star,
+  CreditCard,
+  Banknote,
+  Scan,
+  HelpCircle,
+} from "lucide-react";
 
-import Image from "next/image";
-import { useEffect, useState } from "react";
-import { Product } from "@/types/Product";
-import ProductCard from "@/components/products/ProductCard";
+export default async function HomePage() {
+  let products: Product[] | null = null;
 
-const carouselImages = [
-  "https://plus.unsplash.com/premium_photo-1682259448848-90967eec2edb?q=80&w=703&auto=format&fit=crop",
-  "https://plus.unsplash.com/premium_photo-1683270244840-370bbe365419?w=500&auto=format&fit=crop&q=60",
-  "https://images.unsplash.com/photo-1513161455079-7dc1de15ef3e?q=80&w=688&auto=format&fit=crop",
-];
+  try {
+    products = await getProducts();
+  } catch (error) {
+    console.error("Error cargando productos destacados:", error);
+  }
 
-export default function Home() {
-  const [current, setCurrent] = useState(0);
-  const [products, setProducts] = useState<Product[]>([]);
-
-  useEffect(() => {
-    const storedProducts = localStorage.getItem("products");
-    if (storedProducts)
-      Promise.resolve().then(() => setProducts(JSON.parse(storedProducts)));
-  }, []);
-
-  // Carrusel automático
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrent((prev) => (prev + 1) % carouselImages.length);
-    }, 3500);
-    return () => clearInterval(interval);
-  }, []);
+  const hasProducts = products && products.length > 0;
+  const isError = products === null;
 
   return (
     <div className="w-full flex flex-col">
-      {/* --- CARRUSEL PRINCIPAL --- */}
-      <section className="w-full h-[450px] relative overflow-hidden">
-        {carouselImages.map((img, idx) => (
-          <div
-            key={idx}
-            className={`absolute inset-0 transition-opacity duration-1000 ${
-              idx === current ? "opacity-100" : "opacity-0"
-            }`}
-          >
-            <Image
-              src={img}
-              alt={`Slide ${idx + 1}`}
-              fill
-              className="object-cover"
-              priority={idx === 0}
+      {/* --- 1. CARRUSEL PRINCIPAL --- */}
+      <AutoCarousel />
+
+      {/* --- 2. BENEFICIOS --- */}
+      <section className="bg-[var(--background)] py-12">
+        <div className="max-w-7xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+          {/* Diseño Exclusivo */}
+          <div className="p-4">
+            <Sparkles
+              size={40}
+              className="text-[var(--primary)] mx-auto mb-4"
             />
+            <h3 className="text-lg font-semibold text-[var(--foreground)]">
+              Diseño Exclusivo
+            </h3>
+            <p className="text-sm text-gray-600">
+              Piezas seleccionadas globalmente.
+            </p>
           </div>
-        ))}
-        <div className="absolute inset-0 bg-black bg-opacity-20 flex items-center justify-center">
-          <h1 className="text-white text-4xl md:text-5xl font-bold text-center">
-            Deco-App: Dale estilo a tu hogar
-          </h1>
-        </div>
-      </section>
 
-      {/* --- SOBRE NOSOTROS / FILOSOFÍA --- */}
-      <section className="max-w-6xl mx-auto py-20 px-6 text-center">
-        <h2 className="text-3xl md:text-4xl font-bold mb-6">
-          Nuestra filosofía
-        </h2>
-        <p className="text-gray-700 text-lg md:text-xl leading-relaxed max-w-3xl mx-auto">
-          En Deco-App creemos que cada espacio tiene su propia personalidad. Por
-          eso ofrecemos productos de decoración cuidadosamente seleccionados,
-          combinando estilo, funcionalidad y materiales de primera calidad para
-          transformar tu hogar en un lugar único.
-        </p>
-      </section>
-
-      {/* --- COLECCIONES DESTACADAS --- */}
-      <section className="bg-gray-50 py-16">
-        <div className="max-w-6xl mx-auto px-6">
-          <h2 className="text-3xl font-bold mb-10 text-center">
-            Colecciones Destacadas
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
-            <div className="relative h-60 rounded-xl overflow-hidden shadow-lg cursor-pointer">
-              <Image
-                src="https://images.unsplash.com/photo-1602526215675-ccbbbd89f71a?q=80&w=800"
-                alt="Sillas"
-                fill
-                className="object-cover"
-              />
-              <div className="absolute bottom-4 left-4 text-white text-xl font-semibold bg-black bg-opacity-40 px-3 py-1 rounded">
-                Sillas
-              </div>
-            </div>
-            <div className="relative h-60 rounded-xl overflow-hidden shadow-lg cursor-pointer">
-              <Image
-                src="https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?q=80&w=1200"
-                alt="Lámparas"
-                fill
-                className="object-cover"
-              />
-              <div className="absolute bottom-4 left-4 text-white text-xl font-semibold bg-black bg-opacity-40 px-3 py-1 rounded">
-                Lámparas
-              </div>
-            </div>
-            <div className="relative h-60 rounded-xl overflow-hidden shadow-lg cursor-pointer">
-              <Image
-                src="https://images.unsplash.com/photo-1580540680023-2f17d0d0123e?q=80&w=1200"
-                alt="Mesas"
-                fill
-                className="object-cover"
-              />
-              <div className="absolute bottom-4 left-4 text-white text-xl font-semibold bg-black bg-opacity-40 px-3 py-1 rounded">
-                Mesas
-              </div>
-            </div>
+          {/* Envío Rápido */}
+          <div className="p-4">
+            <Package size={40} className="text-[var(--primary)] mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-[var(--foreground)]">
+              Envío Rápido
+            </h3>
+            <p className="text-sm text-gray-600">Despacho en 24 horas.</p>
           </div>
-        </div>
-      </section>
 
-      {/* --- PRODUCTOS DESTACADOS --- */}
-      <section className="max-w-6xl mx-auto py-20 px-6">
-        <h2 className="text-3xl font-bold mb-12 text-center">
-          Productos Destacados
-        </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
-          {products.slice(0, 8).map((product) => (
-            <ProductCard
-              key={product.id}
-              product={product}
-              canEdit={false} // Solo ver detalle
-              isBuyer={false} // Sin botones de +/-
-              cart={{}}
-              addToCart={() => {}}
-              removeFromCart={() => {}}
-              onEdit={() => {}}
-              onDelete={() => {}}
+          {/* Máxima Calidad */}
+          <div className="p-4">
+            <Star size={40} className="text-[var(--primary)] mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-[var(--foreground)]">
+              Máxima Calidad
+            </h3>
+            <p className="text-sm text-gray-600">
+              Materiales duraderos y premium.
+            </p>
+          </div>
+
+          {/* Pago Flexible */}
+          <div className="p-4">
+            <CreditCard
+              size={40}
+              className="text-[var(--primary)] mx-auto mb-4"
             />
-          ))}
-        </div>
-      </section>
-
-      {/* --- BENEFICIOS / CONFIANZA --- */}
-      <section className="bg-gray-50 py-16">
-        <div className="max-w-6xl mx-auto px-6 grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
-          <div className="p-6 bg-white shadow rounded-xl">
-            <h3 className="text-xl font-semibold mb-2">
-              🚚 Envíos a Todo el País
+            <h3 className="text-lg font-semibold text-[var(--foreground)]">
+              Pago Flexible
             </h3>
-            <p className="text-gray-600 text-sm">
-              Recibí tus productos estés donde estés.
-            </p>
-          </div>
-          <div className="p-6 bg-white shadow rounded-xl">
-            <h3 className="text-xl font-semibold mb-2">
-              💳 Cuotas sin Interés
-            </h3>
-            <p className="text-gray-600 text-sm">
-              Pagá en hasta 6 cuotas sin recargo.
-            </p>
-          </div>
-          <div className="p-6 bg-white shadow rounded-xl">
-            <h3 className="text-xl font-semibold mb-2">🔒 Compra Segura</h3>
-            <p className="text-gray-600 text-sm">
-              Protegemos tus datos con tecnología cifrada.
-            </p>
+            <p className="text-sm text-gray-600">Hasta 6 cuotas sin interés.</p>
           </div>
         </div>
       </section>
 
-      {/* --- NEWSLETTER / CTA --- */}
-      <section className="py-16 bg-white">
-        <div className="max-w-3xl mx-auto px-6 text-center">
-          <h2 className="text-3xl font-bold mb-4">
-            Suscribite a nuestro Newsletter
+      {/* --- 3. PRODUCTOS DESTACADOS --- */}
+      <section className="bg-[var(--background)] py-16 transition-colors duration-500">
+        <div className="max-w-7xl mx-auto px-6">
+          <h2 className="text-4xl font-extrabold mb-12 text-center text-[var(--foreground)]">
+            Nuestros Favoritos
           </h2>
-          <p className="text-gray-700 mb-6">
-            Recibí ofertas y novedades exclusivas directamente en tu correo.
+
+          {/* --- Bloque de Carga/Error --- */}
+          {!hasProducts ? (
+            <div className="text-center p-8 bg-gray-200 dark:bg-gray-800 rounded-lg shadow-inner">
+              {/* 💡 Mejoramos la visibilidad del icono de alerta */}
+              <TriangleAlert className="inline w-8 h-8 text-red-600 dark:text-red-400 mb-4" />
+              <p className="text-lg font-medium text-[var(--foreground)]">
+                {isError
+                  ? "Error de conexión: No se pudo cargar el catálogo de productos destacados."
+                  : "No hay productos destacados disponibles en este momento."}
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+              {products!.slice(0, 4).map((product) => (
+                <ProductCard key={product.id} product={product} />
+              ))}
+            </div>
+          )}
+
+          {/* --- BOTÓN DE CATÁLOGO CORREGIDO --- */}
+          <div className="mt-16 text-center">
+            <Link
+              href="/products"
+              className="inline-block bg-[var(--primary)] text-white text-xl 
+                           px-10 py-3 rounded-full font-bold transition duration-300
+                           shadow-md hover:shadow-xl
+                           hover:bg-[var(--primary-hover)]
+                           transform hover:scale-[1.05]" // Escala ligeramente mayor
+            >
+              Ver Todo el Catálogo
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* --- 4. CONFIANZA / PAGOS --- */}
+      <section className="py-16 bg-[var(--background)]">
+        <div className="max-w-7xl mx-auto px-6 text-center">
+          <h2 className="text-3xl font-bold mb-6 text-[var(--foreground)]">
+            Métodos de Pago Seguros
+          </h2>
+
+          <p className="text-gray-600 mb-10">
+            Aceptamos las principales tarjetas y ofrecemos financiación.
           </p>
-          <div className="flex flex-col sm:flex-row justify-center gap-4">
-            <input
-              type="email"
-              placeholder="Tu correo electrónico"
-              className="border p-3 rounded w-full sm:w-auto flex-1"
+
+          <div className="flex justify-center items-center flex-wrap gap-x-12 gap-y-6">
+            {/* Mastercard/Tarjeta */}
+            <div className="flex flex-col items-center">
+              <CreditCard size={36} className="text-blue-600 mb-2" />
+              <span className="text-gray-700 font-medium">
+                Tarjeta de Crédito
+              </span>
+            </div>
+
+            {/* Transferencia */}
+            <div className="flex flex-col items-center">
+              <Banknote size={36} className="text-green-700 mb-2" />
+              <span className="text-gray-700 font-medium">
+                Transferencia Bancaria
+              </span>
+            </div>
+
+            {/* Mercado Pago */}
+            <div className="flex flex-col items-center">
+              <Scan size={36} className="text-indigo-600 mb-2" />
+              <span className="text-gray-700 font-medium">Mercado Pago</span>
+            </div>
+          </div>
+
+          <div className="mt-12 border-t border-gray-200 pt-8">
+            <HelpCircle
+              size={30}
+              className="text-[var(--primary)] mx-auto mb-3"
             />
-            <button className="bg-blue-600 text-white px-6 py-3 rounded hover:bg-blue-700 transition">
-              Suscribirse
-            </button>
+            <h3 className="text-2xl font-semibold mb-3 text-[var(--foreground)]">
+              ¿Necesitás ayuda?
+            </h3>
+            <Link
+              href="/contact"
+              className="text-[var(--primary)] hover:text-[#a15a49] font-medium transition"
+            >
+              Contáctanos aquí
+            </Link>
           </div>
         </div>
       </section>

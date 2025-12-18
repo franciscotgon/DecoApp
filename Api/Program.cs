@@ -1,8 +1,9 @@
 using DecoApp.Application.Common;
+using DecoApp.Domain.Entities;
+using DecoApp.Domain.Interfaces;
 using DecoApp.Infrastructure.Identity;
 using DecoApp.Infrastructure.Persistence;
 using DecoApp.Infrastructure.Repositories;
-using DecoApp.Infrastructure.Seeders;
 using Domain.Interfaces;
 using FluentValidation;
 using Microsoft.AspNetCore.Identity;
@@ -40,10 +41,16 @@ builder.Services
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddDefaultTokenProviders();
 
+
+//----------------------------------------------
+// Services Configuration
+
+
 // ---------------------------------------------
 // FluentValidation
 // ---------------------------------------------
 builder.Services.AddValidatorsFromAssembly(typeof(AssemblyReference).Assembly);
+
 
 // ---------------------------------------------
 // AutoMapper
@@ -59,10 +66,11 @@ builder.Services.AddMediatR(cfg =>
 });
 
 // ---------------------------------------------
-// Repositories
+// Services
 // ---------------------------------------------
+builder.Services.AddScoped<IIdentityService, IdentityService>();
+builder.Services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
-// Si tenés repositorios especializados, agrégalos aquí.
 
 // ---------------------------------------------
 // Controllers + Swagger
@@ -75,9 +83,9 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll",
         builder => builder
-            .AllowAnyOrigin()   // Permite cualquier dominio
-            .AllowAnyMethod()   // Permite GET, POST, PUT, DELETE...
-            .AllowAnyHeader()   // Permite todos los headers
+            .AllowAnyOrigin()   
+            .AllowAnyMethod()   
+            .AllowAnyHeader()   
     );
 });
 
@@ -92,8 +100,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
 app.UseCors("AllowAll");
+app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 
@@ -114,8 +122,5 @@ using (var scope = app.Services.CreateScope())
     var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
     var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
     await IdentitySeeder.SeedAsync(userManager, roleManager);
-
-    // Seed products
-    await ProductSeeder.SeedAsync(db);
 }
 app.Run();

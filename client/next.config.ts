@@ -1,5 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Buena práctica para detectar problemas potenciales en desarrollo
+  reactStrictMode: true,
+
   images: {
     remotePatterns: [
       {
@@ -16,6 +19,8 @@ const nextConfig = {
       },
     ],
   },
+
+  // Elimina cualquier propiedad 'experimental' a menos que sea estrictamente necesario.
 };
 
 module.exports = nextConfig;

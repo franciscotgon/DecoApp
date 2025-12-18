@@ -1,30 +1,37 @@
-// data-layer/products/ProductRepository.ts
 import { BaseRepository } from "./BaseRepository";
-import { Product } from "@/types/Product";
+import { Product, ProductPayload } from "@/data-layer/types/Product";
 
 export class ProductRepository extends BaseRepository {
   constructor() {
-    super("https://localhost:7025/api");
+    super();
   }
 
-  getAll() {
+  public async getAllForAdmin(): Promise<Product[] | null> {
     return this.get<Product[]>("/products");
   }
 
-  getById(id: number) {
+  public async getById(id: number | string): Promise<Product | null> {
     return this.get<Product>(`/products/${id}`);
   }
 
-  create(product: Product) {
-    return this.post<Product, Product>("/products", product);
+  public async create(payload: ProductPayload): Promise<Product | null> {
+    return this.post<ProductPayload, Product>(`/products`, payload);
   }
 
-  update(id: number, product: Partial<Product>) {
-    return this.put<Partial<Product>, Product>(`/products/${id}`, product);
+  public async update(
+    id: number | string,
+    payload: ProductPayload
+  ): Promise<Product | null> {
+    return this.put<ProductPayload, Product>(`/products/${id}`, payload);
   }
 
-  // 🔥 Método público con nombre propio
-  deleteById(id: number) {
-    return super.delete(`/products/${id}`);
+  public async deleteById(id: number | string): Promise<boolean> {
+    try {
+      await this.delete(`/products/${id}`);
+      return true;
+    } catch (error) {
+      console.error(`Error al eliminar producto con ID ${id}:`, error);
+      return false;
+    }
   }
 }

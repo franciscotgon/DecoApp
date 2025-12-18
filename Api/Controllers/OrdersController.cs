@@ -2,6 +2,7 @@
 using DecoApp.Application.Orders.Commands.DeleteOrder;
 using DecoApp.Application.Orders.Commands.UpdateOrder;
 using DecoApp.Application.Orders.DTOs;
+using DecoApp.Application.Orders.Queries.GetAllOrdersQuery;
 using DecoApp.Application.Orders.Queries.GetOrderById;
 using DecoApp.Application.Orders.Queries.GetOrderByUser;
 using MediatR;
@@ -20,12 +21,20 @@ namespace DecoApp.Api.Controllers
             _mediator = mediator;
         }
 
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<OrderSummaryDto>>> GetAll(CancellationToken ct)
+        {
+            var orders = await _mediator.Send(new GetAllOrdersQuery(), ct);
+            return Ok(orders);
+        }
         // POST api/orders
         [HttpPost]
-        public async Task<ActionResult<int>> Create(CreateOrderDto dto, CancellationToken cancellationToken)
+        [HttpPost]
+        public async Task<ActionResult<int>> Create([FromBody] CreateOrderDto dto, CancellationToken ct)
         {
-            var id = await _mediator.Send(new CreateOrderCommand(dto), cancellationToken);
-            return Ok(id);
+            // Esto coincide con: public record CreateOrderCommand(CreateOrderDto Dto)
+            var id = await _mediator.Send(new CreateOrderCommand(dto), ct);
+            return Ok(new { id });
         }
 
         // GET api/orders/{id}
@@ -35,7 +44,7 @@ namespace DecoApp.Api.Controllers
             var result = await _mediator.Send(new GetOrderByIdQuery { Id = id }, cancellationToken);
 
             if (result == null)
-                return NotFound();
+                return NotFound(new { message = $"No se encontró la orden con ID {id}" });
 
             return Ok(result);
         }
@@ -49,21 +58,22 @@ namespace DecoApp.Api.Controllers
         }
 
         // PUT api/orders/{id}
+        // Generalmente las órdenes no se actualizan por completo, pero si lo necesitas:
         [HttpPut("{id}")]
-        public async Task<ActionResult<int>> Update(int id, UpdateOrderCommand dto, CancellationToken cancellationToken)
+        public async Task<ActionResult<int>> Update(int id, [FromBody] UpdateOrderCommand command, CancellationToken cancellationToken)
         {
-            dto.Id = id;
-            var updated = await _mediator.Send(dto, cancellationToken);
-            return Ok(updated);
+            if (id != command.Id) return BadRequest(new { message = "ID mismatch" });
+
+            var updatedId = await _mediator.Send(command, cancellationToken);
+            return Ok(updatedId);
         }
 
         // DELETE api/orders/{id}
         [HttpDelete("{id}")]
         public async Task<ActionResult<int>> Delete(int id, CancellationToken cancellationToken)
         {
-            var deleted = await _mediator.Send(new DeleteOrderCommand { Id = id }, cancellationToken);
-            return Ok(deleted);
+            var deletedId = await _mediator.Send(new DeleteOrderCommand { Id = id }, cancellationToken);
+            return Ok(deletedId);
         }
     }
 }
-

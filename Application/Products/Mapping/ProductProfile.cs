@@ -4,9 +4,9 @@ using DecoApp.Domain.Entities;
 
 namespace DecoApp.Application.Products.Mapping
 {
-    public class ProductProfile : Profile
+    public class OrderProfile : Profile
     {
-        public ProductProfile()
+        public OrderProfile()
         {
             CreateMap<Product, ProductDto>();
             CreateMap<CreateProductDto, Product>();

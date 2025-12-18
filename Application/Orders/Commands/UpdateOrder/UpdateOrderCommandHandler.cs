@@ -21,7 +21,6 @@ namespace DecoApp.Application.Orders.Commands.UpdateOrder
             if (order == null)
                 throw new NotFoundException(nameof(Order), request.Id);
 
-            // Simple Validation: Ensure Notes is not null
             order.Notes = request.Notes;
 
             _orderRepo.Update(order);

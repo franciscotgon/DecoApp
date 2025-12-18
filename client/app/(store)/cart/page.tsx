@@ -1,81 +1,80 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Product } from "@/lib/types/Product";
+import CartEmpty from "@/components/cart/CartEmpty";
 import CartItem from "@/components/cart/CartItem";
 import CartTotal from "@/components/cart/CartTotal";
-import CartEmpty from "@/components/cart/CartEmpty";
+import { useCart } from "@/hooks/CartContext";
+import { cartService } from "@/app/services/cart.service";
+import { handleApiError } from "@/lib/error-handler";
 
 export default function CartPage() {
   const router = useRouter();
-  const [cart, setCart] = useState<{ [id: number]: number }>({});
-  const [products, setProducts] = useState<Product[]>([]);
+  const {
+    cartItems,
+    total,
+    updateItemQuantity,
+    removeItemFromCart,
+    userId = "36cacece-8f57-4766-b34f-e1d9e49d102d",
+  } = useCart();
+  const [isProcessing, setIsProcessing] = useState(false);
 
-  // Cargar productos y carrito desde localStorage de forma segura
-  useEffect(() => {
-    const storedProducts = localStorage.getItem("products");
-    const storedCart = localStorage.getItem("cart");
+  const handleCheckout = async () => {
+    if (!userId) {
+      alert("Debes iniciar sesión para finalizar la compra.");
+      return;
+    }
 
-    Promise.resolve().then(() => {
-      if (storedProducts) setProducts(JSON.parse(storedProducts));
-      if (storedCart) setCart(JSON.parse(storedCart));
-    });
-  }, []);
+    setIsProcessing(true);
 
-  // Funciones de manipulación de carrito
-  const addToCart = (id: number) => {
-    setCart((prev) => {
-      const updated = { ...prev, [id]: (prev[id] || 0) + 1 };
-      localStorage.setItem("cart", JSON.stringify(updated));
-      return updated;
-    });
+    try {
+      await cartService.syncCart({
+        userId,
+        items: cartItems.map((item) => ({
+          productId: item.product.id,
+          quantity: item.quantity,
+        })),
+      });
+
+      router.push("/checkout");
+    } catch (err: unknown) {
+      const message = handleApiError(err);
+      console.error("[Checkout Sync Error]:", err);
+      alert(message);
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
-  const removeFromCart = (id: number) => {
-    setCart((prev) => {
-      if (!prev[id]) return prev;
-      const updated = { ...prev, [id]: prev[id] - 1 };
-      if (updated[id] === 0) delete updated[id];
-      localStorage.setItem("cart", JSON.stringify(updated));
-      return updated;
-    });
-  };
-
-  const deleteFromCart = (id: number) => {
-    const updated = { ...cart };
-    delete updated[id];
-    setCart(updated);
-    localStorage.setItem("cart", JSON.stringify(updated));
-  };
-
-  // Calcular total
-  const total = Object.entries(cart).reduce((sum, [id, qty]) => {
-    const product = products.find((p) => p.id === Number(id));
-    return product ? sum + product.price * qty : sum;
-  }, 0);
-
-  // Mostrar mensaje si el carrito está vacío
-  if (Object.keys(cart).length === 0) return <CartEmpty />;
+  if (cartItems.length === 0) return <CartEmpty />;
 
   return (
     <div className="max-w-4xl mx-auto px-6 py-12 space-y-6">
-      {Object.entries(cart).map(([id, qty]) => {
-        const product = products.find((p) => p.id === Number(id));
-        if (!product) return null;
-        return (
-          <CartItem
-            key={id}
-            product={product}
-            quantity={qty}
-            addToCart={addToCart}
-            removeFromCart={removeFromCart}
-            deleteFromCart={deleteFromCart}
-          />
-        );
-      })}
+      <header>
+        <h1 className="text-3xl font-bold text-gray-900">Tu Carrito</h1>
+        <p className="text-gray-500 mt-2">
+          Revisa tus productos antes de pagar
+        </p>
+      </header>
 
-      <CartTotal total={total} onCheckout={() => router.push("/checkout")} />
+      <div className="divide-y divide-gray-200 bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+        {cartItems.map((item) => (
+          <CartItem
+            key={item.product.id}
+            product={item.product}
+            quantity={item.quantity}
+            updateQuantity={updateItemQuantity}
+            deleteItem={removeItemFromCart}
+          />
+        ))}
+      </div>
+
+      <CartTotal
+        total={total}
+        onCheckout={handleCheckout}
+        isLoading={isProcessing}
+      />
     </div>
   );
 }

@@ -1,63 +1,52 @@
-// data-layer/BaseRepository.ts
-export abstract class BaseRepository {
-  protected baseUrl: string;
+import { RequestOptions } from "@/data-layer/types/RequestOptions";
+import { http, HttpClient } from "../http/HttpClient";
 
-  constructor(baseUrl: string) {
-    this.baseUrl = baseUrl;
+export abstract class BaseRepository {
+  private readonly httpClient: HttpClient;
+
+  constructor() {
+    this.httpClient = http;
+
+    if (!process.env.NEXT_PUBLIC_API_BASE_URL) {
+      throw new Error(
+        "La URL base de la API (NEXT_PUBLIC_API_BASE_URL) no está definida."
+      );
+    }
   }
 
-  protected async get<T>(endpoint: string): Promise<T> {
-    const res = await fetch(`${this.baseUrl}${endpoint}`, {
-      cache: "no-store",
-    });
-    if (!res.ok) throw new Error(`GET ${endpoint} failed`);
-    return res.json() as Promise<T>;
+  protected async get<T>(
+    endpoint: string,
+    options?: RequestOptions
+  ): Promise<T | null> {
+    return this.httpClient.get<T>(endpoint, options);
   }
 
   protected async post<TBody, TResponse>(
     endpoint: string,
-    body: TBody
-  ): Promise<TResponse> {
-    const res = await fetch(`${this.baseUrl}${endpoint}`, {
-      method: "POST",
-      body: JSON.stringify(body),
-      headers: { "Content-Type": "application/json" },
-    });
-    if (!res.ok) throw new Error(`POST ${endpoint} failed`);
-    return res.json() as Promise<TResponse>;
+    body: TBody,
+    options?: RequestOptions
+  ): Promise<TResponse | null> {
+    return this.httpClient.post<TResponse, TBody>(endpoint, body, options);
   }
 
   protected async put<TBody, TResponse>(
     endpoint: string,
-    body: TBody
-  ): Promise<TResponse> {
-    const res = await fetch(`${this.baseUrl}${endpoint}`, {
-      method: "PUT",
-      body: JSON.stringify(body),
-      headers: { "Content-Type": "application/json" },
-    });
-    if (!res.ok) throw new Error(`PUT ${endpoint} failed`);
-    return res.json() as Promise<TResponse>;
+    body: TBody,
+    options?: RequestOptions
+  ): Promise<TResponse | null> {
+    return this.httpClient.put<TResponse, TBody>(endpoint, body, options);
   }
 
-  protected async delete(endpoint: string): Promise<void> {
-    const res = await fetch(`${this.baseUrl}${endpoint}`, {
-      method: "DELETE",
-    });
-    if (!res.ok) throw new Error(`DELETE ${endpoint} failed`);
-  }
-
-  protected async getPaged<T>(
+  protected async delete(
     endpoint: string,
-    page: number,
-    pageSize: number
-  ): Promise<{ items: T[]; totalCount: number }> {
-    const res = await fetch(
-      `${this.baseUrl}${endpoint}?page=${page}&pageSize=${pageSize}`,
-      { cache: "no-store" }
-    );
-
-    if (!res.ok) throw new Error(`PAGED GET ${endpoint} failed`);
-    return res.json();
+    options?: RequestOptions
+  ): Promise<boolean> {
+    try {
+      await this.httpClient.delete(endpoint, options);
+      return true;
+    } catch (error) {
+      console.error(`Error al intentar DELETE ${endpoint}:`, error);
+      return false;
+    }
   }
 }

@@ -1,8 +1,11 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
+
+import { Providers } from "./providers";
+import { getCategories } from "@/app/services/category.service";
+import { Category } from "@/data-layer/types/Category";
+import AppWrapper from "@/components/AppWraper";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -15,28 +18,33 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Dashboard",
-  description: "Panel de administración de productos",
+  title: "DecoApp | Tu hogar, tu estilo",
+  description: "Ecommerce premium de decoración para interiores y exteriores",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
+  // Cargamos las categorías en el servidor para SEO y carga rápida
+  let categories: Category[] = [];
+
+  try {
+    categories = await getCategories();
+  } catch (error) {
+    console.error("Error crítico cargando categorías en RootLayout:", error);
+    // Podrías dejar 'categories' como array vacío para que el Navbar no rompa
+  }
+
   return (
-    <html lang="en">
+    <html lang="es" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} font-sans bg-[var(--background)] text-[var(--foreground)] pt-20 min-h-screen`}
+        className={`${geistSans.variable} ${geistMono.variable} font-sans bg-[var(--background)] text-[var(--foreground)] min-h-screen pt-20`}
       >
-        <Navbar />
-
-        {/* Contenido principal */}
-        <main className="px-4 sm:px-8 py-8">
-          <div className="max-w-7xl mx-auto">{children}</div>
-        </main>
-
-        <Footer />
+        <Providers>
+          <AppWrapper categories={categories}>{children}</AppWrapper>
+        </Providers>
       </body>
     </html>
   );

@@ -4,7 +4,7 @@ export default function CartEmpty() {
   const router = useRouter();
   return (
     <p className="text-gray-600">
-      Tu carrito está vacío.{" "}
+      Tu carrito está vacío.
       <button
         className="text-blue-500 underline"
         onClick={() => router.push("/products")}

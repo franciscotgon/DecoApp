@@ -1,126 +1,74 @@
-"use client";
-
+import Link from "next/link";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
-import Button from "../ui/Button";
-import { Product } from "@/types/Product";
+import { Product } from "@/data-layer/types/Product";
 
 interface ProductCardProps {
   product: Product;
-  canEdit: boolean; // Vendedor/Admin
-  isBuyer: boolean; // Comprador
-  cart: { [id: number]: number };
-  addToCart: (id: number) => void;
-  removeFromCart: (id: number) => void;
-  onEdit: (product: Product) => void;
-  onDelete: (id: number) => void;
 }
 
-export default function ProductCard({
-  product,
-  canEdit,
-  isBuyer,
-  cart,
-  addToCart,
-  removeFromCart,
-  onEdit,
-  onDelete,
-}: ProductCardProps) {
-  const router = useRouter();
-  const quantity = cart[product.id] || 0;
+const NO_IMAGE_URL = "/images/noImageDefault.png";
+
+export function ProductCard({ product }: ProductCardProps) {
+  const formattedPrice = new Intl.NumberFormat("es-AR", {
+    style: "currency",
+    currency: "ARS",
+  }).format(product.price);
+
+  const hasValidImageUrl =
+    product.imageUrl && product.imageUrl.trim().length > 0;
+
+  const imageUrl = hasValidImageUrl
+    ? (product.imageUrl as string)
+    : NO_IMAGE_URL;
+
+  const isPlaceholder = !hasValidImageUrl;
 
   return (
-    <div className="group bg-white rounded-xl shadow hover:shadow-lg transition overflow-hidden">
-      {/* Imagen y nombre clickables para ir al detalle */}
-      <div
-        className="cursor-pointer"
-        onClick={() => router.push(`/products/${product.id}`)}
-      >
-        {product.imageUrl ? (
-          <Image
-            src={product.imageUrl}
-            alt={product.name}
-            width={400}
-            height={300}
-            className="object-cover h-56 w-full group-hover:scale-105 transition-transform duration-300"
-          />
-        ) : (
-          <div className="h-56 w-full bg-gray-200 flex items-center justify-center">
-            <span className="text-gray-500">Sin imagen</span>
-          </div>
-        )}
-        <h2 className="text-lg font-semibold text-gray-800 mt-2">
+    <Link
+      href={`/products/${product.id}`}
+      className={`group flex flex-col overflow-hidden rounded-lg 
+                  border border-gray-200 dark:border-gray-700 
+                  bg-[var(--background)] shadow-sm 
+                  transition-all hover:shadow-md hover:border-[var(--primary)]`}
+    >
+      <div className="relative aspect-square w-full overflow-hidden bg-gray-100 dark:bg-gray-800">
+        <Image
+          src={imageUrl}
+          alt={product.name}
+          fill
+          sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, 25vw"
+          className={`object-cover object-center 
+                      transition-transform duration-300 
+                      group-hover:scale-105 
+                      ${isPlaceholder ? "opacity-70 grayscale" : ""}`}
+        />
+      </div>
+
+      <div className="flex flex-1 flex-col p-4">
+        <h3 className="text-lg font-semibold text-[var(--foreground)] group-hover:text-[var(--primary-hover)] transition-colors">
           {product.name}
-        </h2>
-      </div>
+        </h3>
 
-      <p className="text-gray-600 mt-2">${product.price}</p>
-
-      <div className="mt-4 flex items-center justify-between">
-        {/* Botones de comprador */}
-        {isBuyer && (
-          <div className="flex items-center gap-2">
-            <Button
-              variant="success"
-              onClick={() => addToCart(product.id)}
-              className="flex items-center p-1"
-            >
-              <Image
-                src="/images/payments/plus.svg"
-                alt="Agregar"
-                width={20}
-                height={20}
-              />
-            </Button>
-
-            <span className="px-2">{quantity}</span>
-
-            <Button
-              variant="danger"
-              onClick={() => removeFromCart(product.id)}
-              className="flex items-center p-1"
-              disabled={quantity === 0}
-            >
-              <Image
-                src="/images/payments/minus.svg"
-                alt="Restar"
-                width={20}
-                height={20}
-              />
-            </Button>
-          </div>
+        {product.description && (
+          <p className="mt-1 line-clamp-2 text-sm text-[var(--foreground)] opacity-70">
+            {product.description}
+          </p>
         )}
 
-        {/* Botones de vendedor/admin */}
-        {canEdit && (
-          <div className="flex gap-2">
-            <Button
-              variant="warning"
-              onClick={() => onEdit(product)}
-              className="flex items-center gap-1"
-            >
-              <Image
-                src="/images/payments/edit-pen.svg"
-                alt="Editar"
-                width={16}
-                height={16}
-              />
-            </Button>
-            <Button
-              variant="danger"
-              onClick={() => onDelete(product.id)}
-              className="flex items-center gap-1"
-            >
-              <Image
-                src="/images/payments/trash-can.svg"
-                alt="Eliminar"
-                width={16}
-                height={16}
-              />
-            </Button>
-          </div>
-        )}
+        <div className="mt-auto pt-4 flex items-center justify-between">
+          <p className="text-xl font-bold text-[var(--foreground)]">
+            {formattedPrice}
+          </p>
+
+          <span
+            className="text-xs font-medium text-white 
+                           bg-[var(--primary)] px-3 py-1 rounded-full 
+                           group-hover:bg-[var(--primary-hover)] transition-colors"
+          >
+            Ver detalle
+          </span>
+        </div>
       </div>
-    </div>
+    </Link>
   );
 }

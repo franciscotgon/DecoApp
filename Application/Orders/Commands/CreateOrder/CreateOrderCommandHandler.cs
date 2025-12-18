@@ -1,5 +1,5 @@
-﻿using DecoApp.Application.Common.Exceptions;
-using DecoApp.Application.Orders.DTOs;
+﻿using AutoMapper;
+using DecoApp.Application.Common.Exceptions;
 using DecoApp.Domain.Entities;
 using Domain.Interfaces;
 using MediatR;
@@ -13,82 +13,78 @@ namespace DecoApp.Application.Orders.Commands.CreateOrder
         private readonly IGenericRepository<OrderItem> _orderItemRepo;
         private readonly IGenericRepository<Product> _productRepo;
         private readonly IGenericRepository<CartItem> _cartItemRepo;
+        private readonly IMapper _mapper;
 
         public CreateOrderCommandHandler(
             IGenericRepository<Cart> cartRepo,
             IGenericRepository<Order> orderRepo,
             IGenericRepository<OrderItem> orderItemRepo,
             IGenericRepository<Product> productRepo,
-            IGenericRepository<CartItem> cartItemRepo)
+            IGenericRepository<CartItem> cartItemRepo,
+            IMapper mapper)
         {
             _cartRepo = cartRepo;
             _orderRepo = orderRepo;
             _orderItemRepo = orderItemRepo;
             _productRepo = productRepo;
             _cartItemRepo = cartItemRepo;
+            _mapper = mapper;
         }
 
         public async Task<int> Handle(CreateOrderCommand request, CancellationToken cancellationToken)
         {
-            var dto = request.Dto;
+            // 1. Mapeo inicial
+            var order = _mapper.Map<Order>(request.Dto);
+            order.CreatedAt = DateTime.UtcNow; // Asegúrate de setear la fecha
 
-            // 1. Search for the user's cart
-            var cart = (await _cartRepo.FindAsync(c => c.UserId == dto.UserId, cancellationToken))
-                .FirstOrDefault();
+            // 2. Buscar el carrito
+            var cart = (await _cartRepo.FindAsync(c => c.UserId == order.UserId, cancellationToken))
+                        .FirstOrDefault();
 
-            if (cart == null)
-                throw new ArgumentException("Cart not found");
+            if (cart == null) throw new ArgumentException("Cart not found");
 
-            cart.Items = (await _cartItemRepo.FindAsync(ci => ci.CartId == cart.Id, cancellationToken)).ToList();
+            var cartItems = (await _cartItemRepo.FindAsync(ci => ci.CartId == cart.Id, cancellationToken)).ToList();
 
-            if (cart.Items.Count == 0)
-                throw new ArgumentException("Cart is empty.");
+            if (!cartItems.Any()) throw new ArgumentException("Cart is empty.");
 
-            // 2. Create the Order
-            var order = new Order
+            decimal totalAmount = 0;
+
+            // 3. Procesar ítems
+            foreach (var cartItem in cartItems)
             {
-                UserId = dto.UserId,
-                CreatedAt = DateTime.UtcNow,
-                Notes = dto.Notes,
-                TotalAmount = 0,
-                Items = new List<OrderItem>()
-            };
+                var product = await _productRepo.GetByIdAsync(cartItem.ProductId, cancellationToken);
 
-            await _orderRepo.AddAsync(order, cancellationToken);
-            await _orderRepo.SaveChangesAsync(cancellationToken);
+                if (product == null) throw new NotFoundException(nameof(Product), cartItem.ProductId);
 
-            decimal total = 0;
+                if (product.Stock < cartItem.Quantity)
+                    throw new Exception($"Stock insuficiente para {product.Name}. Disponibles: {product.Stock}");
 
-            // 3. Create OrderItems
-            foreach (var item in cart.Items)
-            {
-                var product = await _productRepo.GetByIdAsync(item.ProductId, cancellationToken);
-                if (product == null)
-                    throw new NotFoundException(nameof(Product), item.ProductId);
+                // Actualizamos stock
+                product.Stock -= cartItem.Quantity;
+                _productRepo.Update(product);
 
-                var oi = new OrderItem
+                // Creamos OrderItem
+                var orderItem = new OrderItem
                 {
-                    OrderId = order.Id,
                     ProductId = product.Id,
-                    Quantity = item.Quantity,
+                    Quantity = cartItem.Quantity,
                     UnitPrice = product.Price
                 };
 
-                total += oi.UnitPrice * oi.Quantity;
-
-                await _orderItemRepo.AddAsync(oi, cancellationToken);
+                order.Items.Add(orderItem);
+                totalAmount += (orderItem.UnitPrice * orderItem.Quantity);
             }
 
-            // 4. Update total
-            order.TotalAmount = total;
-            _orderRepo.Update(order);
-            await _orderRepo.SaveChangesAsync(cancellationToken);
+            order.TotalAmount = totalAmount;
 
-            // 5. Empty the cart
-            foreach (var ci in cart.Items)
+            // 4. Persistencia
+            await _orderRepo.AddAsync(order, cancellationToken);
+
+            // 5. Limpieza del carrito
+            foreach (var ci in cartItems)
                 _cartItemRepo.Remove(ci);
 
-            await _cartItemRepo.SaveChangesAsync(cancellationToken);
+            await _orderRepo.SaveChangesAsync(cancellationToken);
 
             return order.Id;
         }
